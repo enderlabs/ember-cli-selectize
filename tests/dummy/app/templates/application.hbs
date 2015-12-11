@@ -5,6 +5,7 @@
   {{ember-selectize
     content=names
     selection=name
+    plugins='selectable_placeholder'
     placeholder="Select a name" }}
 </p>
 <p>Selected: {{name}}</p>
@@ -17,6 +18,7 @@
     optionLabelPath="content.label"
     selection=item
     create-item="createAction"
+    plugins='clear_selection'
     placeholder="Select an item" }}
 </p>
 <p>Selected: {{item.label}}</p>
