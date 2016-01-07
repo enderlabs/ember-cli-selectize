@@ -10,10 +10,10 @@ export default function() {
 
     options = Ember.$.extend({
       placeholder: self.settings.placeholder,
-      html: function (data) {
+      html: function () {
         return (
           '<div class="selectize-dropdown-content placeholder-container">' +
-          '<div data-selectable class="option">Clear Selection</div>' +
+            '<div data-selectable class="option">Clear Selection</div>' +
           '</div>'
         );
       }
