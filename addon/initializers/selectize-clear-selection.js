@@ -7,21 +7,26 @@ export default function() {
   /* globals Selectize */
   Selectize.define('clear_selection', function(options) {
     var self = this;
-    var settings = Ember.$.extend({
-      title: 'Clear selection'
+
+    options = Ember.$.extend({
+      placeholder: self.settings.placeholder,
+      html: function (data) {
+        return (
+          '<div class="selectize-dropdown-content placeholder-container">' +
+          '<div data-selectable class="option">Clear Selection</div>' +
+          '</div>'
+        );
+      }
     }, options);
 
-    //Overriding because, ideally you wouldn't use header & clear_selection simultaneously
-    self.plugins.settings.dropdown_header = {
-      title: settings.title
-    };
-    this.require('dropdown_header');
-
+    // override the setup method to add an extra "click" handler
     self.setup = (() => {
       var original = self.setup;
       return () => {
         original.apply(this, arguments);
-        this.$dropdown.find('.selectize-dropdown-header').addClass('clear-selection').on('mousedown', () => {
+        this.$placeholder_container = Ember.$(options.html(options));
+        this.$dropdown.prepend( self.$placeholder_container );
+        this.$dropdown.find('.placeholder-container').on('mousedown', () => {
           self.clear();
           self.close();
           self.blur();
@@ -29,5 +34,6 @@ export default function() {
         });
       };
     })();
+
   });
 }
