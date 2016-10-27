@@ -3,6 +3,7 @@ import {
   moduleForComponent,
   test
 } from 'ember-qunit';
+import hbs from 'htmlbars-inline-precompile';
 
 moduleForComponent('ember-selectize', 'Unit | Component | ember-selectize', {
   // Specify the other units that are required for this test
@@ -24,6 +25,14 @@ test('it renders', function(assert) {
   //test select tagname and ember-selectize class
 });
 
+test('name attribute is bound', function(assert) {
+  var component = this.subject();
+  Ember.run(function() {
+    component.set('name', 'pouet');
+  });
+  assert.equal(this.$().attr('name'), 'pouet');
+});
+
 test('multiple attribute is bound', function(assert) {
   var component = this.subject();
   Ember.run(function() {
@@ -42,6 +51,17 @@ test('required attribute is bound', function(assert) {
     component.set('required', true);
   });
   assert.equal(this.$().attr('required'), 'required');
+});
+
+test('tabindex attribute is properly set to input', function(assert){
+  var component = this.subject();
+  var tabindex = 6;
+
+  Ember.run(function() {
+    component.set('tabindex', tabindex);
+  });
+
+  assert.equal(this.$().parent().find('input').attr('tabindex'), tabindex);
 });
 
 test('maxItems is passed to selectize', function(assert) {
@@ -479,6 +499,24 @@ test('having a selection creates selectize with a selection', function(assert) {
   assert.deepEqual(component._selectize.items, ['item 2']);
 });
 
+test('having a multiple selection adds remove_button plugin by default', function(assert) {
+  var component = this.subject();
+  Ember.run(function() {
+    component.set('multiple', true);
+  });
+  this.render();
+  assert.notEqual(component._selectize.settings.plugins.indexOf('remove_button'), -1);
+});
+
+test('not having a multiple selection does not add remove_button plugin by default', function(assert) {
+  var component = this.subject();
+  Ember.run(function() {
+    component.set('multiple', false);
+  });
+  this.render();
+  assert.equal(component._selectize.settings.plugins.indexOf('remove_button'), -1);
+});
+
 test('having a multiple selection creates selectize with a selection', function(assert) {
   var component = this.subject();
   Ember.run(function() {
@@ -590,10 +628,10 @@ test('it sends create-item action when an item is created in selectize', functio
     }
   };
   this.render();
-  component.set('create-item', 'externalAction');
-  component.set('targetObject', targetObject);
 
   Ember.run(function() {
+    component.set('create-item', 'externalAction');
+    component.set('targetObject', targetObject);
     component._create(testText, function() {});
   });
 });
@@ -893,6 +931,35 @@ test('selection can be set from a Promise when multiple=false', function(assert)
   assert.deepEqual(component._selectize.items, ["2"]);
 });
 
+test('changing selection to a promise that resolves to null clears selection', function(assert) {
+  assert.expect(4);
+
+  var component = this.subject();
+
+  var yehuda = Ember.Object.create({ id: 1, firstName: 'Yehuda' });
+  var tom = Ember.Object.create({ id: 2, firstName: 'Tom' });
+
+  Ember.run(function() {
+    component.set('content', Ember.A([yehuda, tom]));
+    component.set('multiple', false);
+    component.set('optionValuePath', 'id');
+    component.set('optionLabelPath', 'firstName');
+    component.set('selection', Ember.RSVP.Promise.resolve(tom));
+  });
+
+  this.render();
+
+  assert.equal(component._selectize.items.length, 1);
+  assert.deepEqual(component._selectize.items, ["2"]);
+
+  Ember.run(function() {
+    component.set('selection', Ember.RSVP.Promise.resolve(null));
+  });
+
+  assert.equal(component._selectize.items.length, 0);
+  assert.deepEqual(component._selectize.items, []);
+});
+
 test('selection from a Promise don\'t overwrite newer selection once resolved, when multiple=false', function(assert) {
   assert.expect(1);
 
@@ -995,5 +1062,64 @@ test('content from a Promise don\'t overwrite newer content once resolved', func
   });
 
   this.render();
+
+});
+
+test('renders components', function(assert) {
+
+  this.register('component:foo-bar', Ember.Component.extend({}));
+  this.register('template:components/foo-bar', hbs`Hi, {{data.firstName}}!`);
+
+  var yehuda = Ember.Object.create({ id: 1, firstName: 'Yehuda' });
+  var tom = Ember.Object.create({ id: 2, firstName: 'Tom' });
+  var seb = Ember.Object.create({ id: 3, firstName: 'Seb' });
+
+  var component = this.subject();
+
+  Ember.run(function() {
+    component.set('optionComponent', 'foo-bar');
+    component.set('optionValuePath', 'id');
+    component.set('optionLabelPath', 'firstName');
+    component.set('content', Ember.A([yehuda, tom, seb]));
+    component.set('selection', tom);
+  });
+
+  this.render();
+
+  assert.deepEqual(component._selectize.items, ["2"]);
+  assert.equal(component._selectize.$dropdown_content.children().length, 3);
+  assert.equal(component._selectize.$dropdown_content.children().text(), 'Hi, Yehuda!Hi, Tom!Hi, Seb!');
+
+  Ember.run(() => {
+    component.set('content.firstObject.firstName', 'Miguel');
+  });
+
+  assert.equal(component._selectize.$dropdown_content.children().text(), 'Hi, Miguel!Hi, Tom!Hi, Seb!', 'It rerenders!');
+});
+
+test('renders function', function(assert) {
+
+  var yehuda = Ember.Object.create({ id: 1, firstName: 'Yehuda' });
+  var tom = Ember.Object.create({ id: 2, firstName: 'Tom' });
+  var seb = Ember.Object.create({ id: 3, firstName: 'Seb' });
+
+  var component = this.subject();
+
+  Ember.run(function() {
+    component.set('optionFunction', function(data) {
+      assert.equal(arguments.length, 2, 'arguments length');
+      return `<div>Hi, ${data.get('firstName')}!</div>`;
+    });
+    component.set('optionValuePath', 'id');
+    component.set('optionLabelPath', 'firstName');
+    component.set('content', Ember.A([yehuda, tom, seb]));
+    component.set('selection', tom);
+  });
+
+  this.render();
+
+  assert.deepEqual(component._selectize.items, ["2"]);
+  assert.equal(component._selectize.$dropdown_content.children().length, 3);
+  assert.equal(component._selectize.$dropdown_content.children().text(), 'Hi, Yehuda!Hi, Tom!Hi, Seb!');
 
 });
