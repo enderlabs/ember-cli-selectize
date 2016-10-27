@@ -211,15 +211,6 @@ export default Component.extend({
     }
 
     //Rebuild into object for plugin option support
-    var plugins = {};
-    this.plugins.forEach(plugin => plugins[plugin] = {});
-
-    if (plugins['clear_selection'] && this.get('clear-selection')) {
-      plugins['clear_selection'].title = this.get('clear-selection');
-    }
-
-    //Rebuild into object for plugin option support
-    var plugins = {};
     this.plugins.forEach(plugin => plugins[plugin] = {});
 
     if (plugins['clear_selection'] && this.get('clear-selection')) {
