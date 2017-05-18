@@ -10,6 +10,9 @@ Check (old demo): http://miguelcobain.github.io/ember-selectize
 
 Should run wherever Ember and Selectize run.
 
+## Change Management/SDLC
+This project follows the standard frontend change process and git flow as documented [in the ember-deployment project](https://github.com/enderlabs/ember-deployment/blob/develop/README.md) and the core [Teem SDLC](https://github.com/enderlabs/engineering-handbook/blob/master/sdlc.md). Any exceptions or project specific details to the development process are documented below.
+
 ## Installation
 
 ### As an Ember CLI addon
